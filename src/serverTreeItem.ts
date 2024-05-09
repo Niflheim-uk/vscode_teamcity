@@ -1,98 +1,77 @@
 import * as vscode from 'vscode';
-import * as settings from './settings';
 import { TreeItemCollapsibleState } from 'vscode';
-import { BuildStatus, getTCBuildStatus, getTCBuildType, getTCProject, getTCRootProject } from './restApiInterface';
+import { BuildStatus } from './restApiInterface';
 import { RestApiBuildType, RestApiProject } from './interfaces';
+import { TeamCityItem } from './teamCityItem';
+import { teamCityModel } from './extension';
 
 export class ServerTreeItem extends vscode.TreeItem {
-  public readonly isProject:boolean;
   private readonly projectData: RestApiProject|undefined;
   private readonly buildTypeData: RestApiBuildType|undefined;
-  
-  constructor(public readonly xmlData:any, parentId?:string, buildStatus?:BuildStatus) {
-    var hasChildren = false;
-    if((xmlData.buildTypes && xmlData.buildTypes.count > 0) ||
-      (xmlData.projects && xmlData.projects.count > 0)) {
-        hasChildren = true;
-    }
-    const collapsibleState = hasChildren? 
+  constructor(
+    private modelData:TeamCityItem,
+  ) {
+    const collapsibleState = (modelData.children.length >0)?  
         TreeItemCollapsibleState.Collapsed : TreeItemCollapsibleState.None;
-    super(xmlData.name, collapsibleState);
-    if(parentId) {
-      this.id = parentId.concat(xmlData.name);
+
+    super(modelData.xmlData.name, collapsibleState);
+    this.label = modelData.xmlData.name;
+    if(this.modelData.parent) {
+      this.id = this.modelData.parent.xmlData.name.concat(modelData.xmlData.name);
     } else {
-      this.id = xmlData.name;
+      this.id = modelData.xmlData.name;
     }
-    this.label = xmlData.name;
 
-    this.isProject = ServerTreeItem.isProjectData(xmlData);
-    if(this.isProject) {
-      this.projectData = xmlData;
-    } else {
-      this.buildTypeData = xmlData;
+    this.setIconAndContext();
+  }
+  private setIconAndContext() {
+    var iconColour = new vscode.ThemeColor('terminal.ansiWhite');
+    if(this.modelData.getAggregateBuildStatus() === BuildStatus.success) {
+      iconColour = new vscode.ThemeColor('terminal.ansiBrightGreen');
+    } else if(this.modelData.getAggregateBuildStatus() === BuildStatus.failure) {
+      iconColour = new vscode.ThemeColor('terminal.ansiRed');
+    }
+    if(this.modelData.isProject) {
+      this.iconPath = new vscode.ThemeIcon('extensions', iconColour);
+      this.contextValue = "Project";
+    } else  {
+      this.iconPath = new vscode.ThemeIcon('primitive-square', iconColour);
+      this.contextValue = "BuildConfig";
     }
   }
-
-  private static isProjectData(xmlData:any):boolean {
-    if(xmlData.href && xmlData.href.match("/app/rest/projects/id:")) {
-      return true;
-    } 
-    return false;
-  }
-  private static isBuildTypeData(xmlData:any):boolean {
-    if(xmlData.href && xmlData.href.match("/app/rest/buildTypes/id:")) {
-      return true;
-    } 
-    return false;
-  }
-
 
   public async getChildNodes():Promise<ServerTreeItem[]> {
     let nodes:ServerTreeItem[] = [];
-    if(this.isProject) {
-      if(this.projectData!.projects && (this.projectData!.projects.count > 0)) {
-        for (let index = 0; index < this.projectData!.projects.count; index++) {
-          const proj:RestApiProject = this.projectData!.projects.project[index];
-          const xmlData = await getTCProject(proj.id);
-          nodes.push(new ServerTreeItem(xmlData, this.id));
-        }
+    for (let i = 0; i < this.modelData.children.length; i++) {
+      const data = this.modelData.children[i];
+      nodes.push(new ServerTreeItem(data));
+    }
+    nodes = nodes.sort((n1,n2) => {
+      /* sort by type */
+      if(n1.modelData.isProject && !n2.modelData.isProject) {
+        return 1;
       }
-      if(this.projectData!.buildTypes && (this.projectData!.buildTypes.count > 0)) {
-        for (let index = 0; index < this.projectData!.buildTypes.count; index++) {
-          const buildType:RestApiBuildType = this.projectData!.buildTypes.buildType[index];
-          const xmlData = await getTCBuildType(buildType.id);
-          const buildStatus = await getTCBuildStatus(buildType.id);
-          nodes.push(new ServerTreeItem(xmlData, this.id, buildStatus));
-        }
+      if(!n1.modelData.isProject && n2.modelData.isProject) {
+        return -1;
       }
-    
-      nodes = nodes.sort((n1,n2) => {
-        /* sort by type */
-        if(n1.isProject && !n2.isProject) {
-          return 1;
-        }
-        if(!n1.isProject && n2.isProject) {
-          return -1;
-        }
-        /* sort by name if type is the same */
-        if (n1.xmlData.name > n2.xmlData.name) {
-          return 1;
-        }
-        if (n1.xmlData.name < n2.xmlData.name) {
-          return -1;
-        }
-        /* type is the same, label is the same */
-        return 0;
-      });
-    } 
+      /* sort by name if type is the same */
+      if (n1.modelData.xmlData.name > n2.modelData.xmlData.name) {
+        return 1;
+      }
+      if (n1.modelData.xmlData.name < n2.modelData.xmlData.name) {
+        return -1;
+      }
+      /* type is the same, label is the same */
+      return 0;
+    });
     return nodes;
   }
 
-  public static async getRootProject():Promise<ServerTreeItem[]> {
-    const xml = await getTCRootProject();
-    if(xml && ServerTreeItem.isProjectData(xml)) {
-      const rootNode = new ServerTreeItem(xml);
-      return [rootNode];
+  public static async getRootTreeItem():Promise<ServerTreeItem[]> {
+    const root = await teamCityModel.getRootProject();
+    if(root) {
+      const rootTreeItem = new ServerTreeItem(root);
+      return [rootTreeItem];
     }
     return [];
   }

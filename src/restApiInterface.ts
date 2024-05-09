@@ -15,7 +15,7 @@ export async function getTCRootProject(): Promise<RestApiProject | undefined> {
 }
 
 export async function getTCProject(id:string): Promise<RestApiProject | undefined> {
-  return await getRestApiGetResponse(`/app/rest/project/id:${id}`);
+  return await getRestApiGetResponse(`/app/rest/projects/id:${id}`);
 }
 export async function getTCBuildType(buildId:string):Promise<RestApiBuildType | undefined> {
   return await getRestApiGetResponse(`/app/rest/buildTypes/id:${buildId}`);
