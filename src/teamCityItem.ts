@@ -1,12 +1,13 @@
 
-import { BuildStatus, getTCBuildStatus, getTCBuildType, getTCProject, getTCRootProject } from './restApiInterface';
-import { RestApiBuildType, RestApiProject } from './interfaces';
+import { BuildStatus, getTCRecentBuilds, getTCBuildType, getTCProject, getTCRootProject } from './restApiInterface';
+import { RestApiBuildState, RestApiBuildStatus, RestApiBuildType, RestApiProject, RestApiTypeBuild } from './interfaces';
 
 export class TeamCityItem  {
   public readonly isProject:boolean;
   private readonly projectData: RestApiProject|undefined;
   private readonly buildTypeData: RestApiBuildType|undefined;
   public children:TeamCityItem[]=[];
+  public recentBuilds:RestApiTypeBuild[] = [];
   constructor(
     public readonly xmlData:any, 
     public readonly parent:TeamCityItem|null, 
@@ -33,6 +34,26 @@ export class TeamCityItem  {
     } 
     return false;
   }
+  public getBuildStatus():BuildStatus {
+    if(this.recentBuilds[0]===undefined || this.recentBuilds[0].state === undefined) {
+      return BuildStatus.unknown;
+    } else {
+      switch (this.recentBuilds[0].state) {
+      case RestApiBuildState.running: 
+        return BuildStatus.inprogress;
+      case RestApiBuildState.queued:
+        return BuildStatus.queued;
+      case RestApiBuildState.finished:
+        if(this.recentBuilds[0].status === "SUCCESS") {
+          return BuildStatus.success;
+        } else {
+          return BuildStatus.failure;
+        }
+      default:
+        return BuildStatus.unknown;
+      }
+    }  
+  }
 
   public async getChildren():Promise<void> {
     let nodes:TeamCityItem[] = [];
@@ -50,8 +71,8 @@ export class TeamCityItem  {
         for (let index = 0; index < this.projectData!.buildTypes.count; index++) {
           const buildType:RestApiBuildType = this.projectData!.buildTypes.buildType[index];
           const xmlData = await getTCBuildType(buildType.id);
-          const buildStatus = await getTCBuildStatus(buildType.id);
-          var node = new TeamCityItem(xmlData, this, buildStatus);
+          this.recentBuilds = await getTCRecentBuilds(buildType.id);
+          var node = new TeamCityItem(xmlData, this, this.getBuildStatus());
           await node.getChildren();
           nodes.push(node);
         }

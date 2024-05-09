@@ -7,7 +7,6 @@ export interface PromptParameter {
   value:string;
   selectData?:string[];
 }
-
 /****************************************/
 /* TeamCity Rest Api                    */
 /****************************************/
@@ -42,31 +41,6 @@ export interface RestApiProjects {
   prevHref:string;
   project:RestApiProject[];
 }
-  
-// export interface RestApiServer {
-//   version:string;
-//   versionMajor:string;
-//   versionMinor:string;
-//   startTime:string;
-//   currentTime:string;
-//   buildNumber:string;
-//   buildData:string;
-//   internalId:string;
-//   role:string;
-//   webUrl:string;
-//   artifactsUrl:string;
-//   projects:{href:string};
-//   vcsRoots:{href:string};
-//   builds:{href:string};
-//   users:{href:string};
-//   userGroups:{href:string};
-//   agents:{href:string};
-//   buildQueues:{href:string};
-//   agentPools:{href:string};
-//   investigations:{href:string};
-//   mutes:{href:string};
-//   nodes:{href:string};
-// }
 
 export interface RestApiBuildTypes {
   count:number;
@@ -123,6 +97,18 @@ export interface RestApiTypeBuild {
   state?:string;
   href?:string;
   webUrl?:string;
+}
+export enum RestApiBuildState {
+  queued = "queued",
+  finished = "finished",
+  running = "running",
+  deleted = "deleted",
+  unknown = "unknown"
+}
+export enum RestApiBuildStatus {
+  success = "SUCCESS",
+  failure = "FAILURE",
+  unknown = "Unknown"
 }
 export interface RestApiTypeBuilds {
   count:string;
