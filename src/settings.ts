@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 export function getServerUrl() : string|undefined {
   const settings = vscode.workspace.getConfiguration();
   var url:string|undefined = settings.get('teamCity.server.URL');
-  if(url) {
+  if(url && url.charAt(url.length-1)==='/') {
     url = url.slice(0,url.length-1);
   }
   return url;
