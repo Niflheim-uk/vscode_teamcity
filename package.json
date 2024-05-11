@@ -30,17 +30,46 @@
     "commands": [
       {
         "command": "teamCity.configServerURL",
-        "title": "Set the TeamCity server URL"
+        "title": "Set the TeamCity server URL",
+        "category": "TeamCity"
       },
       {
         "command": "teamCity.configAccessToken",
-        "title": "Set the TeamCity access token"
+        "title": "Set the TeamCity access token",
+        "category": "TeamCity"
       },
       {
         "command": "teamCity.configTeamCity",
-        "title": "Configure the TeamCity addon"
+        "title": "Configure the TeamCity addon",
+        "category": "TeamCity"
+      },
+      {
+        "command": "teamCity.runBuild",
+        "title": "Run build",
+        "icon": "$(play)",
+        "category": "TeamCity"
+      },
+      {
+        "command": "teamCity.viewBuild",
+        "title": "View build",
+        "icon": "$(eye)",
+        "category": "TeamCity"
       }
     ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "teamCity.viewBuild",
+          "when": "view == teamCity.server && viewItem == BuildConfig",
+          "group": "inline"
+        },
+        {
+          "command": "teamCity.runBuild",
+          "when": "view == teamCity.server && viewItem == BuildConfig",
+          "group": "inline"
+        }
+      ]
+    },
     "viewsContainers": { 
       "activitybar": [
         {

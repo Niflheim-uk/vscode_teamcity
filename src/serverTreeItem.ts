@@ -1,68 +1,118 @@
 import * as vscode from 'vscode';
 import { TreeItemCollapsibleState } from 'vscode';
 import { BuildStatus } from './restApiInterface';
-import { RestApiBuildType, RestApiProject } from './interfaces';
-import { TeamCityItem } from './teamCityItem';
-import { teamCityModel } from './extension';
+import { TeamCityItem, TeamCityItemType } from './teamCityItem';
+import { serverTreeView, teamCityModel } from './extension';
 
 export class ServerTreeItem extends vscode.TreeItem {
-  private readonly projectData: RestApiProject|undefined;
-  private readonly buildTypeData: RestApiBuildType|undefined;
   constructor(
-    private modelData:TeamCityItem,
+    public modelItem:TeamCityItem,
   ) {
-    const collapsibleState = (modelData.children.length >0)?  
+    const collapsibleState = (modelItem.children.length >0)?  
         TreeItemCollapsibleState.Collapsed : TreeItemCollapsibleState.None;
-
-    super(modelData.xmlData.name, collapsibleState);
-    this.label = modelData.xmlData.name;
-    if(this.modelData.parent) {
-      this.id = this.modelData.parent.xmlData.name.concat(modelData.xmlData.name);
-    } else {
-      this.id = modelData.xmlData.name;
-    }
-
-    this.setIconAndContext();
+    const uri:vscode.Uri=modelItem.getHref();
+    super(uri, collapsibleState);
+    this.modelItem.treeItem = this;
+    this.id = this.modelItem.getId();
+    this.label = this.modelItem.getLabel();
+    this.setIcon();
+    this.setContext();
   }
-  private setIconAndContext() {
+  
+  private setIcon() {
     var iconColour = new vscode.ThemeColor('terminal.ansiWhite');
-    if(this.modelData.getAggregateBuildStatus() === BuildStatus.success) {
+    const buildStatus = this.modelItem.getAggregateBuildStatus();
+    if(buildStatus === BuildStatus.success) {
       iconColour = new vscode.ThemeColor('terminal.ansiBrightGreen');
-    } else if(this.modelData.getAggregateBuildStatus() === BuildStatus.failure) {
+    } else if(buildStatus === BuildStatus.failure) {
       iconColour = new vscode.ThemeColor('terminal.ansiRed');
     }
-    if(this.modelData.isProject) {
+    if(this.modelItem.itemType === TeamCityItemType.project) {
       this.iconPath = new vscode.ThemeIcon('extensions', iconColour);
-      this.contextValue = "Project";
     } else  {
-      this.iconPath = new vscode.ThemeIcon('primitive-square', iconColour);
+      switch(buildStatus) {
+      case BuildStatus.success:
+      case BuildStatus.unknown:
+      case BuildStatus.failure:
+        this.iconPath = new vscode.ThemeIcon('primitive-square', iconColour);
+        break;
+      case BuildStatus.inprogress:
+        this.iconPath = new vscode.ThemeIcon('gear~spin', iconColour);
+        this.watchBuildStatus();
+        break;
+      case BuildStatus.queued:
+        this.iconPath = new vscode.ThemeIcon('sync~spin', iconColour);
+        this.watchBuildStatus();
+        break;
+      }  
+    }
+  }
+  private setContext() {
+    switch(this.modelItem.itemType) {
+    case TeamCityItemType.project: 
+      this.contextValue = "Project";
+      break;
+    case TeamCityItemType.buildconfig:
       this.contextValue = "BuildConfig";
+      break;
+    case TeamCityItemType.build:
+      this.contextValue = "Build";
+      break;
+    default:
+      this.contextValue = "Unknown";
+      break;
+    }
+  }
+  private watchBuildStatus() {
+    if(this.modelItem.itemType === TeamCityItemType.build) {
+      setTimeout(async () => {
+      console.log(`${new Date().getSeconds()} - watchBuildStatus: ${this.id}`);
+        if(this.modelItem.parent) {
+          await this.modelItem.parent.getChildren();
+          const treeParent = this.modelItem.parent.treeItem;
+          treeParent.setIcon();
+          serverTreeView.refresh(treeParent);
+        }
+      }, 5000);
     }
   }
 
   public async getChildNodes():Promise<ServerTreeItem[]> {
     let nodes:ServerTreeItem[] = [];
-    for (let i = 0; i < this.modelData.children.length; i++) {
-      const data = this.modelData.children[i];
+    for (let i = 0; i < this.modelItem.children.length; i++) {
+      const data = this.modelItem.children[i];
       nodes.push(new ServerTreeItem(data));
     }
     nodes = nodes.sort((n1,n2) => {
       /* sort by type */
-      if(n1.modelData.isProject && !n2.modelData.isProject) {
+      if(n1.modelItem.itemType !== TeamCityItemType.project && 
+          n2.modelItem.itemType === TeamCityItemType.project) {
         return 1;
-      }
-      if(!n1.modelData.isProject && n2.modelData.isProject) {
+      } else 
+      if(n1.modelItem.itemType === TeamCityItemType.project && 
+          n2.modelItem.itemType !== TeamCityItemType.project) {
         return -1;
-      }
+      } else
+      if(n1.modelItem.itemType !== TeamCityItemType.buildconfig && 
+          n2.modelItem.itemType === TeamCityItemType.buildconfig) {
+        return 1;
+      } else
+      if(n1.modelItem.itemType === TeamCityItemType.buildconfig && 
+          n2.modelItem.itemType !== TeamCityItemType.buildconfig) {
+        return -1;
+      } else 
       /* sort by name if type is the same */
-      if (n1.modelData.xmlData.name > n2.modelData.xmlData.name) {
-        return 1;
-      }
-      if (n1.modelData.xmlData.name < n2.modelData.xmlData.name) {
+      if(n1.modelItem.itemType === TeamCityItemType.build && n2.modelItem.itemType === TeamCityItemType.build) {
+        if (n1.modelItem.getId() < n2.modelItem.getId()) {
+          return 1;
+        }
+        return -1;
+      } else {
+        if (n1.modelItem.getId() > n2.modelItem.getId()) {
+          return 1;
+        }
         return -1;
       }
-      /* type is the same, label is the same */
-      return 0;
     });
     return nodes;
   }
@@ -75,4 +125,15 @@ export class ServerTreeItem extends vscode.TreeItem {
     }
     return [];
   }
+  public async runBuild() {
+    if(this.modelItem.itemType === TeamCityItemType.buildconfig) {
+      await this.modelItem.runBuild();
+      //this.setIconAndContext();
+      serverTreeView.refresh(this);
+    }
+  }
+  public viewBuild() {
+
+  }
+
 }
