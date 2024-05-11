@@ -7,11 +7,11 @@ export async function getRestApiGetResponse(restCall:string) {
   const token = getAccessToken();
   if(serverURL && token) {
     env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-		const {data} = await axios.get(serverURL+restCall, {headers: getHeadersForGet(token)});
-    if (data.status === 200) {
-      console.log(data);
+		const response = await axios.get(serverURL+restCall, {headers: getHeadersForGet(token)});
+    if (response.status === 200) {
+      return response.data;
     }	else {
-      return data;
+      console.log(response);
     }
   }
 }
@@ -20,11 +20,11 @@ export async function getRestApiPostResponse(restCall:string, restPayload:any) {
   const token = getAccessToken();
   if(serverURL && token) {
     env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-		const data = await axios.post(serverURL+restCall, restPayload, {headers:getHeadersForPost(token)}); 
-    if (data.status === 200) {
-      console.log(data);
+		const response = await axios.post(serverURL+restCall, restPayload, {headers:getHeadersForPost(token)}); 
+    if (response.status === 200) {
+      return response.data;
     }	else {
-      return data;
+      console.log(response);
     }
   }
 }  
