@@ -89,14 +89,16 @@ export interface RestApiTypeDetail {
   regexp?:string;
   selectData?:string[];
 }
-export interface RestApiTypeBuild {
-  id?:string;
+export interface RestApiBuild {
   buildTypeId?:string;
-  number?:string;
-  status?:string;
-  state?:string;
+  finishOnAgentDate?:string;
   href?:string;
+  id?:string;
+  number?:string;
+  state?:string;
+  status?:string;
   webUrl?:string;
+  statusText?:string;
 }
 export enum RestApiBuildState {
   queued = "queued",
@@ -110,12 +112,12 @@ export enum RestApiBuildStatus {
   failure = "FAILURE",
   unknown = "Unknown"
 }
-export interface RestApiTypeBuilds {
+export interface RestApiBuilds {
   count:string;
   href:string;
   nextHref?:string;
   prevHref?:string;
-  build:RestApiTypeBuild[];
+  build:RestApiBuild[];
 }
 export interface RestApiStep {
   id:string;
