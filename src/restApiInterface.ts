@@ -1,5 +1,15 @@
 import { getRestApiGetResponse, getRestApiPostResponse } from "./restApiLowLevel";
-import { PromptParameter, RestApiBuildType, RestApiProject, RestApiProjects, RestApiProperties, RestApiProperty, RestApiTypeBuild, RestApiTypeBuilds, RestApiTypeDetail } from "./interfaces";
+import { 
+  PromptParameter, 
+  RestApiBuildType, 
+  RestApiProject, 
+  RestApiProjects, 
+  RestApiProperties, 
+  RestApiProperty, 
+  RestApiBuild, 
+  RestApiBuilds, 
+  RestApiTypeDetail 
+} from "./interfaces";
 
 export enum BuildStatus {
   success,
@@ -10,48 +20,82 @@ export enum BuildStatus {
 }
 
 export async function getTCRootProject(): Promise<RestApiProject | undefined> {
+  console.log(`Called getTCRootProject`);
   const projectsXml:RestApiProjects = await getRestApiGetResponse("/app/rest/projects");
+  var root=undefined;
   if(projectsXml && (projectsXml.count > 0)) {
-    return await getTCProject(projectsXml.project[0].id);
+    root = await getTCProject(projectsXml.project[0].id);
   }
+  return root;
 }
 
 export async function getTCProject(id:string): Promise<RestApiProject | undefined> {
+  console.log(`Called getTCProject: ${id}`);
   return await getRestApiGetResponse(`/app/rest/projects/id:${id}`);
 }
 export async function getTCBuildType(buildId:string):Promise<RestApiBuildType | undefined> {
+  console.log(`Called getTCBuildType: ${buildId}`);
   return await getRestApiGetResponse(`/app/rest/buildTypes/id:${buildId}`);
 }
-
-export async function getTCRecentBuilds(buildId:string): Promise<RestApiTypeBuild[]> {
+export async function getTCBuild(id:string): Promise<RestApiBuild |undefined> {
+  console.log(`Called getTCBuild`);
+  return await getRestApiGetResponse(`/app/rest/builds/id:${id}`);
+}
+export async function getTCRecentBuilds(buildId:string): Promise<RestApiBuild[]> {
+  console.log(`Called getTCRecentBuilds: ${buildId}`);
   const numBuilds = 5;
-  const call = `/app/rest/builds/?locator=buildType:${buildId},count:${numBuilds}`;
-  const xml =  await getRestApiGetResponse(call);
-  var builds:RestApiTypeBuild[] = [];
-  if(xml) {
-    const typeBuilds:RestApiTypeBuilds = xml;
-    const nBuilds = +typeBuilds.count;
-    for(let i=0; i<nBuilds && i < numBuilds; i++) {
+  const call = `/app/rest/builds/?locator=buildType:${buildId},count:${numBuilds},canceled:any,failedToStart:any,state:`;
+  const xml1 =  await getRestApiGetResponse(`${call}queued`);
+  const xml2 =  await getRestApiGetResponse(`${call}running`);
+  const xml3 =  await getRestApiGetResponse(`${call}finished`);
+  var builds:RestApiBuild[] = [];
+  if(xml1) {
+    const typeBuilds:RestApiBuilds = xml1;
+    for(let i=0; i < +typeBuilds.count; i++) {
       builds.push(typeBuilds.build[i]);
+    }
+  }
+  if(xml2) {
+    const typeBuilds:RestApiBuilds = xml2;
+    for(let i=0; i < +typeBuilds.count; i++) {
+      builds.push(typeBuilds.build[i]);
+    }
+  }
+  if(xml3) {
+    const typeBuilds:RestApiBuilds = xml3;
+    for(let i=0; i < +typeBuilds.count; i++) {
+      builds.push(typeBuilds.build[i]);
+    }
+  }
+  while(builds.length > numBuilds) {
+    builds.pop();
+  }
+  for (let i = 0; i < builds.length; i++) {
+    const detail = await getRestApiGetResponse(`/app/rest/builds/id:${builds[i].id}`);
+    if(detail && detail.statusText) {
+      builds[i].statusText = detail.statusText;
     }
   }
   return builds;
 }
-export function setTCBuildQueue(buildConfig:RestApiBuildType):void {
+export async function setTCBuildQueue(buildConfig:RestApiBuildType): Promise<RestApiBuild|undefined> {
+  console.log(`Called setTCBuildQueue: ${buildConfig.id}`);
+  var build = undefined;
   var promptParameters:PromptParameter[]|undefined;
-  const buildId = buildConfig.id;
   if(buildConfig.parameters && buildConfig.parameters.count > 0) {
     promptParameters = getPromptParameters(buildConfig.parameters);
     // const prompt = new Prompt();
     // prompt.createPrompt(buildId, promptParameters);
   } else {
-    const payload = {"buildType" : {"id": buildId}};
-    getRestApiPostResponse("/app/rest/buildQueue",payload);
+    const payload = {"buildType" : {"id": buildConfig.id}};
+    build = await getRestApiPostResponse("/app/rest/buildQueue",payload);
   }
+  return build;
 }
-export function setTCBuildQueueWithParameters(buildId:string, propertyData:RestApiProperty[]) {
+export async function setTCBuildQueueWithParameters(buildId:string, propertyData:RestApiProperty[]) {
+  console.log(`Called setTCBuildQueueWithParameters: ${buildId}`);
   const payload = {"buildType" : {"id": buildId}, "properties": {"property" :propertyData}};
-  getRestApiPostResponse("/app/rest/buildQueue",payload);
+  return await getRestApiPostResponse("/app/rest/buildQueue",payload);
 }
 
 
@@ -61,7 +105,7 @@ function getPromptParameters(buildParams:RestApiProperties):PromptParameter[] {
     const property = buildParams.property[index];
     const promptParameter = getPromptParameter(property);
     if(promptParameter) {
-        promptParameters.push(promptParameter);
+      promptParameters.push(promptParameter);
     }
   }
   return promptParameters;
