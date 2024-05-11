@@ -165,8 +165,7 @@ export class TeamCityItem  {
   public async runBuild() {
     if(this.itemType === TeamCityItemType.buildconfig) {
       const buildTypeData:RestApiBuildType = this.xmlData;
-      await setTCBuildQueue(buildTypeData);
-      await this.getChildren(); /* refresh builds */
+      await setTCBuildQueue(buildTypeData, this);
     }
   }
   public getHref():Uri {

@@ -2,6 +2,7 @@
   "name": "teamcity",
   "displayName": "TeamCity",
   "description": "Allows you to browse projects, build configurations and trigger a new build from within VS code",
+  "publisher": "Niflheim",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.89.0"

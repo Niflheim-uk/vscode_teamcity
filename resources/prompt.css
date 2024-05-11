@@ -1,0 +1,58 @@
+.promptContainer {
+  position:relative;
+  display:block;
+}
+.promptInputContainer {
+  position:relative;
+  display:flex;
+  flex-direction:row;
+}
+.promptLabel {
+  position:relative;
+  left:0cm;
+  width:3cm;
+}
+.promptInput {
+  position:relative;
+  left:0cm;
+  width:10cm;
+}
+.tall {
+  height:5cm;
+}
+.promptDescription {
+  position:relative;
+  left:3cm;
+  width:10cm;
+}
+.hide {
+  display:none;
+}
+.labelDiv:hover + .hide {
+  display:block;
+}
+
+table.buildSteps, table.buildStepProperties {
+  border-collapse:collapse;
+  margin-left: 0.2cm;
+  margin-right: 0.2cm;
+}
+table.buildSteps td,th {
+  border: solid 1px;
+  border-color: var(--vscode-editor-foreground);
+  vertical-align: top;
+  text-align: center;
+  margin-left: 0.2cm;
+  padding: 0.1cm 0.3cm 0.1cm 0.3cm;
+}
+table.buildStepProperties td,th {
+  border: solid 1px;
+  border-color: var(--vscode-editor-foreground);
+  vertical-align: top;
+}
+table.buildStepProperties td {
+  text-align: left;
+}
+table.buildStepProperties th {
+  text-align: center;
+}

@@ -10,6 +10,8 @@ import {
   RestApiBuilds, 
   RestApiTypeDetail 
 } from "./interfaces";
+import { Prompt } from "./prompt";
+import { TeamCityItem } from "./teamCityItem";
 
 export enum BuildStatus {
   success,
@@ -70,34 +72,40 @@ export async function getTCRecentBuilds(buildId:string): Promise<RestApiBuild[]>
   while(builds.length > numBuilds) {
     builds.pop();
   }
+  console.log(builds[0].state);
   for (let i = 0; i < builds.length; i++) {
     const detail = await getRestApiGetResponse(`/app/rest/builds/id:${builds[i].id}`);
     if(detail && detail.statusText) {
       builds[i].statusText = detail.statusText;
     }
   }
+  console.log(builds[0].state, builds[0].statusText);
   return builds;
 }
-export async function setTCBuildQueue(buildConfig:RestApiBuildType): Promise<RestApiBuild|undefined> {
+export async function setTCBuildQueue(buildConfig:RestApiBuildType, buildItem:TeamCityItem) {
   console.log(`Called setTCBuildQueue: ${buildConfig.id}`);
-  var build = undefined;
   var promptParameters:PromptParameter[]|undefined;
   if(buildConfig.parameters && buildConfig.parameters.count > 0) {
     promptParameters = getPromptParameters(buildConfig.parameters);
-    // const prompt = new Prompt();
-    // prompt.createPrompt(buildId, promptParameters);
+    const prompt = new Prompt(buildItem);
+    prompt.createPrompt(buildConfig.id, promptParameters);
   } else {
     const payload = {"buildType" : {"id": buildConfig.id}};
-    build = await getRestApiPostResponse("/app/rest/buildQueue",payload);
+    await postBuildQueue(payload, buildItem);
   }
-  return build;
 }
-export async function setTCBuildQueueWithParameters(buildId:string, propertyData:RestApiProperty[]) {
+export async function setTCBuildQueueWithParameters(buildId:string, propertyData:RestApiProperty[], buildItem:TeamCityItem) {
   console.log(`Called setTCBuildQueueWithParameters: ${buildId}`);
   const payload = {"buildType" : {"id": buildId}, "properties": {"property" :propertyData}};
-  return await getRestApiPostResponse("/app/rest/buildQueue",payload);
+  await postBuildQueue(payload, buildItem);
 }
+async function postBuildQueue(payload:any, buildItem:TeamCityItem) {
+  const build = await getRestApiPostResponse("/app/rest/buildQueue",payload);
+  if(build) {
+    await buildItem.getChildren();
+  }
 
+}
 
 function getPromptParameters(buildParams:RestApiProperties):PromptParameter[] {
   var promptParameters:PromptParameter[]=[];
