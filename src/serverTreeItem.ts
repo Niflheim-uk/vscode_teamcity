@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { TreeItemCollapsibleState } from 'vscode';
 import { BuildStatus } from './restApiInterface';
 import { TeamCityItem, TeamCityItemType } from './teamCityItem';
-import { serverTreeView, teamCityModel } from './extension';
+import { outputChannel, serverTreeView, teamCityModel } from './extension';
 
 export class ServerTreeItem extends vscode.TreeItem {
   constructor(
@@ -132,8 +132,12 @@ export class ServerTreeItem extends vscode.TreeItem {
       serverTreeView.refresh(this);
     }
   }
-  public viewBuild() {
-
+  public async viewBuild() {
+    if(this.modelItem.itemType === TeamCityItemType.buildconfig || this.modelItem.itemType === TeamCityItemType.build) {
+      const log = await this.modelItem.getBuildLog();
+      outputChannel.replace(log);
+      outputChannel.show(true);
+    }
   }
 
 }

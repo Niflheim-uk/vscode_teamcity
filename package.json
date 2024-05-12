@@ -55,13 +55,26 @@
         "title": "View build",
         "icon": "$(eye)",
         "category": "TeamCity"
+      },
+      {
+        "command": "teamCity.refresh",
+        "title": "Refresh all",
+        "icon": "$(refresh)",
+        "category": "TeamCity"
       }
     ],
     "menus": {
+      "view/title": [
+        {
+          "command": "teamCity.refresh",
+          "when": "view == teamCity.server",
+          "group": "navigation"
+        }
+      ],
       "view/item/context": [
         {
           "command": "teamCity.viewBuild",
-          "when": "view == teamCity.server && viewItem == BuildConfig",
+          "when": "view == teamCity.server && (viewItem == BuildConfig || viewItem == Build)",
           "group": "inline"
         },
         {

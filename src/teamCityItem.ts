@@ -1,5 +1,5 @@
 import { Uri } from 'vscode';
-import { BuildStatus, getTCRecentBuilds, getTCBuildType, getTCProject, setTCBuildQueue, getTCBuild } from './restApiInterface';
+import { BuildStatus, getTCRecentBuilds, getTCBuildType, getTCProject, setTCBuildQueue, getTCBuild, getTCBuildLog } from './restApiInterface';
 import { RestApiBuildState, RestApiBuildType, RestApiProject, RestApiBuild, RestApiBuildStatus } from './interfaces';
 
 export enum TeamCityItemType {
@@ -167,6 +167,19 @@ export class TeamCityItem  {
       const buildTypeData:RestApiBuildType = this.xmlData;
       await setTCBuildQueue(buildTypeData, this);
     }
+  }
+  public async getBuildLog():Promise<string> {
+    if(this.itemType === TeamCityItemType.buildconfig && this.children.length > 0) {
+      return await this.children[0].getBuildLog();
+    }
+    if(this.itemType === TeamCityItemType.build) {
+      const buildData:RestApiBuild = this.xmlData;
+      if(buildData.id && buildData.status) {
+        var log:string = await getTCBuildLog(buildData.id);
+        return log;
+      }
+    }
+    return 'No log found';
   }
   public getHref():Uri {
     return this.xmlData.href;

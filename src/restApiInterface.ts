@@ -43,6 +43,10 @@ export async function getTCBuild(id:string): Promise<RestApiBuild |undefined> {
   console.log(`Called getTCBuild`);
   return await getAxiosGetResponse(`/app/rest/builds/id:${id}`);
 }
+export async function getTCBuildLog(buildId:string):Promise<string> {
+  console.log(`Called getTCBuildLog`);
+  return await getAxiosGetResponse(`/downloadBuildLog.html?buildId=${buildId}&plain=true`);
+}
 export async function getTCRecentBuilds(buildId:string): Promise<RestApiBuild[]> {
   console.log(`Called getTCRecentBuilds: ${buildId}`);
   const numBuilds = 5;
@@ -76,7 +80,7 @@ export async function getTCRecentBuilds(buildId:string): Promise<RestApiBuild[]>
   for (let i = 0; i < builds.length; i++) {
     const detail = await getAxiosGetResponse(`/app/rest/builds/id:${builds[i].id}`);
     if(detail && detail.statusText) {
-      builds[i].statusText = detail.statusText;
+      builds[i] = detail;
     }
   }
   console.log(builds[0].state, builds[0].statusText);
