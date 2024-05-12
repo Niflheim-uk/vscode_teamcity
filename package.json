@@ -20,12 +20,7 @@
     "configuration": {
       "title": "TeamCity",
       "properties": {
-        "teamCity.credentials.accessToken": {
-          "type": "string",
-          "default": "",
-          "markdownDescription": "A user access token is required to communicate with the server via the REST API. Create a token via your TeamCity server profile page."
-        },
-        "teamCity.server.URL": {
+        "teamcity.server.URL": {
           "type": "string",
           "default": "",
           "markdownDescription": "The URL to the TeamCity server."
@@ -73,6 +68,10 @@
           "command": "teamCity.refresh",
           "when": "view == teamCity.server",
           "group": "navigation"
+        },
+        {
+          "command": "teamCity.configAccessToken",
+          "when": "view == teamCity.server"
         }
       ],
       "view/item/context": [
@@ -111,17 +110,17 @@
       {
         "view": "teamCity.server",
         "contents": "Please provide the server URL\n[Set Server URL](command:teamCity.configServerURL)",
-        "when": "config.teamCity.server.URL ===''"
+        "when": "config.teamcity.server.URL ===''"
       },
       {
         "view": "teamCity.server",
         "contents": "Please create a personal access token via your TeamCity server profile.\n[Set Access Token](command:teamCity.configAccessToken)",
-        "when": "config.teamCity.server.URL !=='' && config.teamCity.credentials.accessToken ===''"
+        "when": "config.teamcity.server.URL !=='' && !teamcity.accessToken"
       },
       {
         "view": "teamCity.server",
         "contents": "No items found.\nPlease verify settings.\n[Team City Settings](command:teamCity.configTeamCity)",
-        "when": "config.teamCity.server.URL !=='' && config.teamCity.credentials.accessToken !==''"
+        "when": "config.teamcity.server.URL !=='' && teamcity.accessToken"
       }
     ]
   },

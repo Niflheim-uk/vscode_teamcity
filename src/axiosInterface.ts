@@ -4,7 +4,7 @@ import { env } from 'process';
 
 export async function getAxiosGetResponse(page:string) {
   const serverURL = getServerUrl();
-  const token = getAccessToken();
+  const token = await getAccessToken();
   if(serverURL && token) {
     env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 		const response = await axios.get(serverURL+page, {headers: getHeadersForGet(token)});
@@ -17,7 +17,7 @@ export async function getAxiosGetResponse(page:string) {
 }
 export async function getAxiosPostResponse(page:string, restPayload:any) {
   const serverURL = getServerUrl();
-  const token = getAccessToken();
+  const token = await getAccessToken();
   if(serverURL && token) {
     env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 		const response = await axios.post(serverURL+page, restPayload, {headers:getHeadersForPost(token)}); 
