@@ -2,12 +2,12 @@ import { getAccessToken, getServerUrl } from "./settings";
 import axios from 'axios';
 import { env } from 'process';
 
-export async function getRestApiGetResponse(restCall:string) {
+export async function getAxiosGetResponse(page:string) {
   const serverURL = getServerUrl();
   const token = getAccessToken();
   if(serverURL && token) {
     env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-		const response = await axios.get(serverURL+restCall, {headers: getHeadersForGet(token)});
+		const response = await axios.get(serverURL+page, {headers: getHeadersForGet(token)});
     if (response.status === 200) {
       return response.data;
     }	else {
@@ -15,12 +15,12 @@ export async function getRestApiGetResponse(restCall:string) {
     }
   }
 }
-export async function getRestApiPostResponse(restCall:string, restPayload:any) {
+export async function getAxiosPostResponse(page:string, restPayload:any) {
   const serverURL = getServerUrl();
   const token = getAccessToken();
   if(serverURL && token) {
     env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-		const response = await axios.post(serverURL+restCall, restPayload, {headers:getHeadersForPost(token)}); 
+		const response = await axios.post(serverURL+page, restPayload, {headers:getHeadersForPost(token)}); 
     if (response.status === 200) {
       return response.data;
     }	else {

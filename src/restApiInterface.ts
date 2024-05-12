@@ -1,4 +1,4 @@
-import { getRestApiGetResponse, getRestApiPostResponse } from "./restApiLowLevel";
+import { getAxiosGetResponse, getAxiosPostResponse } from "./axiosInterface";
 import { 
   PromptParameter, 
   RestApiBuildType, 
@@ -23,7 +23,7 @@ export enum BuildStatus {
 
 export async function getTCRootProject(): Promise<RestApiProject | undefined> {
   console.log(`Called getTCRootProject`);
-  const projectsXml:RestApiProjects = await getRestApiGetResponse("/app/rest/projects");
+  const projectsXml:RestApiProjects = await getAxiosGetResponse("/app/rest/projects");
   var root=undefined;
   if(projectsXml && (projectsXml.count > 0)) {
     root = await getTCProject(projectsXml.project[0].id);
@@ -33,23 +33,23 @@ export async function getTCRootProject(): Promise<RestApiProject | undefined> {
 
 export async function getTCProject(id:string): Promise<RestApiProject | undefined> {
   console.log(`Called getTCProject: ${id}`);
-  return await getRestApiGetResponse(`/app/rest/projects/id:${id}`);
+  return await getAxiosGetResponse(`/app/rest/projects/id:${id}`);
 }
 export async function getTCBuildType(buildId:string):Promise<RestApiBuildType | undefined> {
   console.log(`Called getTCBuildType: ${buildId}`);
-  return await getRestApiGetResponse(`/app/rest/buildTypes/id:${buildId}`);
+  return await getAxiosGetResponse(`/app/rest/buildTypes/id:${buildId}`);
 }
 export async function getTCBuild(id:string): Promise<RestApiBuild |undefined> {
   console.log(`Called getTCBuild`);
-  return await getRestApiGetResponse(`/app/rest/builds/id:${id}`);
+  return await getAxiosGetResponse(`/app/rest/builds/id:${id}`);
 }
 export async function getTCRecentBuilds(buildId:string): Promise<RestApiBuild[]> {
   console.log(`Called getTCRecentBuilds: ${buildId}`);
   const numBuilds = 5;
   const call = `/app/rest/builds/?locator=buildType:${buildId},count:${numBuilds},canceled:any,failedToStart:any,state:`;
-  const xml1 =  await getRestApiGetResponse(`${call}queued`);
-  const xml2 =  await getRestApiGetResponse(`${call}running`);
-  const xml3 =  await getRestApiGetResponse(`${call}finished`);
+  const xml1 =  await getAxiosGetResponse(`${call}queued`);
+  const xml2 =  await getAxiosGetResponse(`${call}running`);
+  const xml3 =  await getAxiosGetResponse(`${call}finished`);
   var builds:RestApiBuild[] = [];
   if(xml1) {
     const typeBuilds:RestApiBuilds = xml1;
@@ -74,7 +74,7 @@ export async function getTCRecentBuilds(buildId:string): Promise<RestApiBuild[]>
   }
   console.log(builds[0].state);
   for (let i = 0; i < builds.length; i++) {
-    const detail = await getRestApiGetResponse(`/app/rest/builds/id:${builds[i].id}`);
+    const detail = await getAxiosGetResponse(`/app/rest/builds/id:${builds[i].id}`);
     if(detail && detail.statusText) {
       builds[i].statusText = detail.statusText;
     }
@@ -100,7 +100,7 @@ export async function setTCBuildQueueWithParameters(buildId:string, propertyData
   await postBuildQueue(payload, buildItem);
 }
 async function postBuildQueue(payload:any, buildItem:TeamCityItem) {
-  const build = await getRestApiPostResponse("/app/rest/buildQueue",payload);
+  const build = await getAxiosPostResponse("/app/rest/buildQueue",payload);
   if(build) {
     await buildItem.getChildren();
   }
