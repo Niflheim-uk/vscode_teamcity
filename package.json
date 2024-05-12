@@ -3,8 +3,10 @@
   "displayName": "TeamCity",
   "description": "Allows you to browse projects, build configurations and trigger a new build from within VS code",
   "publisher": "Niflheim",
-  "repository": {"url": "https://github.com/Niflheim-uk/vscode_teamcity"},
-  "version": "0.0.1",
+  "repository": {
+    "url": "https://github.com/Niflheim-uk/vscode_teamcity"
+  },
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.89.0"
   },
@@ -85,7 +87,7 @@
         }
       ]
     },
-    "viewsContainers": { 
+    "viewsContainers": {
       "activitybar": [
         {
           "id": "teamCity",
@@ -106,22 +108,22 @@
     },
     "viewsWelcome": [
       {
-        "view":"teamCity.server",
+        "view": "teamCity.server",
         "contents": "Please provide the server URL\n[Set Server URL](command:teamCity.configServerURL)",
         "when": "config.teamCity.server.URL ===''"
       },
       {
-        "view":"teamCity.server",
+        "view": "teamCity.server",
         "contents": "Please create a personal access token via your TeamCity server profile.\n[Set Access Token](command:teamCity.configAccessToken)",
-        "when": "config.teamCity.server.URL !=='' && config.teamCity.credentials.accessToken ===''" 
+        "when": "config.teamCity.server.URL !=='' && config.teamCity.credentials.accessToken ===''"
       },
       {
-        "view":"teamCity.server",
+        "view": "teamCity.server",
         "contents": "No items found.\nPlease verify settings.\n[Team City Settings](command:teamCity.configTeamCity)",
-        "when": "config.teamCity.server.URL !=='' && config.teamCity.credentials.accessToken !==''" 
+        "when": "config.teamCity.server.URL !=='' && config.teamCity.credentials.accessToken !==''"
       }
     ]
-   },
+  },
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild-base": "NODE_OPTIONS='--trace-deprecation' esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
