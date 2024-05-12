@@ -3,6 +3,7 @@
   "displayName": "TeamCity",
   "description": "Allows you to browse projects, build configurations and trigger a new build from within VS code",
   "publisher": "Niflheim",
+  "icon": "/resources/icon.png",
   "repository": {
     "url": "https://github.com/Niflheim-uk/vscode_teamcity"
   },
