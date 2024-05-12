@@ -5,6 +5,7 @@ import { TeamCityItem, TeamCityItemType } from './teamCityItem';
 import { outputChannel, serverTreeView, teamCityModel } from './extension';
 
 export class ServerTreeItem extends vscode.TreeItem {
+  private static readonly watchInterval = 15000;
   constructor(
     public modelItem:TeamCityItem,
   ) {
@@ -73,7 +74,7 @@ export class ServerTreeItem extends vscode.TreeItem {
           treeParent.setIcon();
           serverTreeView.refresh(treeParent);
         }
-      }, 5000);
+      }, ServerTreeItem.watchInterval);
     }
   }
 
