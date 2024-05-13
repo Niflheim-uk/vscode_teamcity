@@ -95,15 +95,17 @@ export async function getTCRecentBuilds(buildId:string): Promise<RestApiBuild[]>
 }
 export async function setTCBuildQueue(buildConfig:RestApiBuildType, buildItem:TeamCityItem) {
   console.log(`Called setTCBuildQueue: ${buildConfig.id}`);
+  const payload = {"buildType" : {"id": buildConfig.id}};
   var promptParameters:PromptParameter[]|undefined;
   if(buildConfig.parameters && buildConfig.parameters.count > 0) {
     promptParameters = getPromptParameters(buildConfig.parameters);
-    const prompt = new Prompt(buildItem);
-    prompt.createPrompt(buildConfig.id, promptParameters);
-  } else {
-    const payload = {"buildType" : {"id": buildConfig.id}};
-    await postBuildQueue(payload, buildItem);
+    if(promptParameters.length > 0) {
+      const prompt = new Prompt(buildItem);
+      prompt.createPrompt(buildConfig.id, promptParameters);
+      return;
+    }
   }
+  await postBuildQueue(payload, buildItem);
 }
 export async function setTCBuildQueueWithParameters(buildId:string, propertyData:RestApiProperty[], buildItem:TeamCityItem) {
   console.log(`Called setTCBuildQueueWithParameters: ${buildId}`);
