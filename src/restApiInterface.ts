@@ -76,14 +76,21 @@ export async function getTCRecentBuilds(buildId:string): Promise<RestApiBuild[]>
   while(builds.length > numBuilds) {
     builds.pop();
   }
-  console.log(builds[0].state);
   for (let i = 0; i < builds.length; i++) {
     const detail = await getAxiosGetResponse(`/app/rest/builds/id:${builds[i].id}`);
     if(detail && detail.statusText) {
       builds[i] = detail;
     }
   }
-  console.log(builds[0].state, builds[0].statusText);
+  if(builds[0]) {
+    if(builds[0].state) {
+      console.log(builds[0].state, builds[0].statusText);
+    } else {
+      console.log("undefined state");
+    }
+  } else {
+    console.log("No builds");
+  }
   return builds;
 }
 export async function setTCBuildQueue(buildConfig:RestApiBuildType, buildItem:TeamCityItem) {
