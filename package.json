@@ -7,7 +7,7 @@
   "repository": {
     "url": "https://github.com/Niflheim-uk/vscode_teamcity"
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "engines": {
     "vscode": "^1.89.0"
   },
